@@ -1,0 +1,233 @@
+<%@ page language="java" contentType="text/html; charset=EUC-KR"   pageEncoding="EUC-KR"%>
+
+<%@ page import="database.datadef.FaqCategoryDataObject"  %>
+<%@ page import="database.datadef.FaqDataObject"  %>
+<%@ page import="database.datadef.AclDataObject"  %>
+<%@ page import="common.utility.StringUtility"  %>
+
+
+<%@ page import="database.sqlmap.sqlMapClientManager"  %>
+<%@ page import="com.ibatis.sqlmap.client.*"  %>
+
+
+<%@ page import="java.io.*" %>
+<%@ page import="java.util.*" %>
+<%@ page import="java.text.*" %>
+
+<%@include  file="/baas/include/session.jsp" %>
+<%@include  file="/baas/include/value.jsp" %>
+
+<%
+
+    out.println("<script>alert('faq viewlist test ');</script>");
+	
+	SqlMapClient sqlMap = sqlMapClientManager.getSqlMapInstance();
+
+	int pageSize = 10;
+	int currentPage = pageNumber;
+	int startRow = currentPage * pageSize - pageSize +1;
+	int endRow = currentPage * pageSize;
+	int totalCount = 0;
+	int number = 0;
+	
+	
+	StringUtility strobj = new StringUtility();
+	String goURL="";
+	 
+	String tableName = "tb_" + dbName;
+		
+	Map countmap = new HashMap();
+	
+	countmap.put("tableName", tableName);
+	
+	if (!divisionCode.equals("AL")){
+		countmap.put("divisionCode", divisionCode);
+	}
+	if (!categoryCode.equals("AL")){
+		countmap.put("categoryCode", categoryCode);
+	}
+	totalCount = ((Integer)sqlMap.queryForObject("getTotalCount3", countmap)).intValue();
+	
+	String [][] divisionArray = new String[][]{
+			{"전체","AL"},
+			{"파인 크리크","PC"},
+			{"파인  밸리","PV"}
+			//,{"웨스트  파인","WP"},
+			//{"F&B","NC"}
+		};
+%>
+<table class="box">
+<tr>
+	<%
+		for(int i=0; i < divisionArray.length; i++) {
+		if (divisionArray[i][1].equals(divisionCode)) {
+	%>
+			<th style="width: <%= 850/divisionArray.length %>px"><%=divisionArray[i][0]%></th>	
+	<%
+		}
+		else { 
+			goURL = strobj.generateForFaqURL(globalMenu, localMenu, dbName, commandName, 1, divisionArray[i][1], divisionArray[i][1], "AL");
+	%>
+		<td style="width: <%= 850/divisionArray.length %>px"><a href="<%=goURL%>"><%=divisionArray[i][0]%></a></td>
+	<%
+		}
+	}
+	%>
+</tr>
+</table><br>
+<table class="box">
+<tr>
+	<%	
+		List categoryList = new ArrayList();	
+	
+		Map catemap = new HashMap();
+		if (!divisionCode.equals("AL")){
+			catemap.put("divisionCode", divisionCode);
+		}
+		categoryList = sqlMap.queryForList("faqCategoryList", catemap);
+		
+		if (categoryList.size() == 0){
+			out.println("<script>alert('분류가  없습니다. 분류  관리로  이동합니다.');</script>"); 
+			
+			out.println("<script>location.href='/baas/index.jsp?global_menu=3&local_menu=2&db=faq_category&cmd=viewlist&page=1'</script>");
+		}
+		int borderWidth = (categoryList.size() >= 10 ? 85 : 850/categoryList.size());
+		for(int i=0; i < categoryList.size(); i++){
+			  
+			FaqCategoryDataObject catedataobj = (FaqCategoryDataObject) categoryList.get(i);
+			if (catedataobj.getCategory_code().equals(categoryCode)){
+	%>
+				<th style="width: <%=borderWidth %>px"><%=catedataobj.getCategory_name()%><br></th>
+	<%
+			}
+			else {
+				goURL = strobj.generateForFaqURL(globalMenu, localMenu, dbName, commandName, 1, divisionCode, accessCode, catedataobj.getCategory_code());
+	%>
+				<td style="width: <%=borderWidth %>px">
+					<a href="<%=goURL%>"><%=catedataobj.getCategory_name()%></a><br>
+				</td>	
+				<% if (i % 10 == 9)  { %>
+				</tr><tr>				
+	<%		
+				}
+			}
+		}
+	%>
+</tr>
+</table><br>
+<table class="normal">	
+<tr>
+	<td style="text-align:left;" >
+	총  <%=totalCount%>개의  게시물이  있습니다. 
+	</td>
+	<td style="text-align:right;" >
+	<%
+		if(sessionSuperuserAccessLevel.equals("SUPER") || sessionSuperuserDivisionCode.equals(divisionCode)){
+			goURL = strobj.generateForBoardURL(globalMenu, localMenu, dbName, "writeform", pageNumber, divisionCode, divisionCode);	
+	%>
+	<span class="button medium icon"><span class="add"></span><a href="<%=goURL%>">글쓰기</a></span>
+	<%
+		}
+	%>
+	</td>
+</tr>
+</table>
+ <table class="list">	
+<tr>
+	<th style="width: 10%">번호</th>
+	<th style="width: 10%">분류</th>
+	<th style="width: 10%">사업장</th>
+	<th style="width: 70%">질문</th>
+	
+</tr>
+<%
+	if (totalCount >0){
+		
+		Map pagemap = new HashMap();
+		
+		pagemap.put("tableName", tableName);
+		
+		if (!divisionCode.equals("AL")){
+			pagemap.put("divisionCode", divisionCode);
+		}
+		if (!categoryCode.equals("AL")){
+			pagemap.put("categoryCode", categoryCode);
+		}
+		pagemap.put("pagingSize", Integer.toString(endRow));
+		pagemap.put("startRow", Integer.toString(startRow));
+		pagemap.put("endRow", Integer.toString(endRow));
+		
+		List boardList = new ArrayList();
+		
+		boardList = sqlMap.queryForList("faqPagingList", pagemap);
+		int virtualNumber =0;
+		for(int i=0; i < boardList.size(); i++){
+			FaqDataObject dataobj = (FaqDataObject) boardList.get(i);
+			goURL = strobj.generateForBoardURL(globalMenu, localMenu, dbName, "viewdoc", pageNumber, dataobj.getSeq_no(), divisionCode, dataobj.getDivision_code());
+			virtualNumber = totalCount - (pageSize * (pageNumber-1) + i);
+%>
+	<tr>
+        <td><%= virtualNumber %></td>
+        <td><%= dataobj.getCategory_name() %></td>
+        <td><%= dataobj.getDivision_name() %></td>
+        <td style="text-align:left">
+        <a  href="<%=goURL %>"><%= dataobj.getTitle() %></a>
+        </td>
+	</tr>
+<%	}
+	}
+	else {
+%>
+	<tr><td colspan=4> 게시된  글이  없습니다.</td></tr>
+<%
+	}
+%>
+</table><br>
+<table>
+<tr>
+	<td>	
+	<%
+	
+	if(totalCount >0) {
+		int pageCount = totalCount / pageSize + (totalCount % pageSize == 0 ? 0 : 1);
+		
+		int startPage = (int)(currentPage/10)*10+1;
+		int pageBlock = 10;
+		int endPage = startPage + pageBlock-1;
+		
+		if(endPage > pageCount) endPage = pageCount;
+		
+		 
+		
+		if(startPage > 10) {
+			int prevPage = startPage - 10;
+			goURL = strobj.generateForBoardURL(globalMenu, localMenu, dbName, "viewlist", prevPage, divisionCode, accessCode);
+		%>
+			<a  href="<%=goURL %>">[이전]</a>
+		<%
+		}
+		for(int i = startPage ; i <= endPage ; i++) {
+			if (i==currentPage){
+				out.println("[<b>"+ i +"</b>]");
+			}
+			else{
+				goURL = strobj.generateForBoardURL(globalMenu, localMenu, dbName, "viewlist", i, divisionCode, accessCode);
+		%>	
+			<a  href="<%=goURL %>"><%=i %></a>
+		<%	
+			}
+		}
+		if (endPage < pageCount) {
+			int nextPage = startPage + 10;
+			goURL = strobj.generateForBoardURL(globalMenu, localMenu, dbName, "viewlist", nextPage, divisionCode, accessCode);
+		%>	
+			<a  href="<%=goURL %>">[다음]</a>
+		<%	
+		}
+	}
+	%>
+		
+</td></tr>
+</table><br><br>
+
+

@@ -1,0 +1,56 @@
+A:link  {text-decoration:none; color: #000000}
+A:visited {text-decoration:none; color : #000000}
+A:hover {text-decoration : underline ; color : #000000}
+
+
+body {
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	background-color: #d4d0c8;
+	font-family: verdana,arial,curier,돋움;
+	font-style: normal;
+	font-size: 12px;
+	line-height: 100%;
+	color: #000000;
+}
+
+
+/* 달력  테이블 */
+table.calendar {
+	width:200px;
+	border-width: 	0px;
+	border-spacing: 2px;
+	border-style: solid;
+	border-color: #efeef;
+	border-collapse: separate;
+	background-color: #d4d0c8;
+}
+table.calendar th {
+	border-width: 1px;
+	padding: 6px;
+	
+	border-width: 1px;
+	padding: 6px;
+	border-style: outset;
+	border-color: #efefef;
+	
+	background-color: #d4d0c8;
+	color: #000000;
+	font-size:9pt;
+	line-height:100%;
+	-moz-border-radius: ;
+}
+table.calendar td {
+	border-width: 1px;
+	padding: 6px;
+	
+	border-width: 1px;
+	padding: 6px;
+	border-style: inset;
+	border-color: #efefef;
+
+	background-color: #d4d0c8;
+	line-height:100%;
+	-moz-border-radius: ;
+}
+
