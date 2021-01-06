@@ -13,7 +13,7 @@
 <%@include  file="/baas/include/value.jsp" %>
 <script type="text/javascript" src="/baas/js/jquery-1.6.2.min.js"></script>
 <script language="JavaScript">
-<!--fff
+<!--
 $(document).ready(function(){
 	$.extend({
 		confirmDelete : function() {
